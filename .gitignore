@@ -1,0 +1,7 @@
+*.o
+*.c.pre
+*.c.s
+*.dump
+*.out
+*~
+code/Project/*

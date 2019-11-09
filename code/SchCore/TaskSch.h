@@ -22,6 +22,7 @@
 typedef struct TaskCtrlBlock
 {
     unsigned int *StackPtr;     //Stack Pointer
+    unsigned int DelayTicks;    //DelayTicks Count
 }TCB;
 
 typedef unsigned int Stack_t;
@@ -40,6 +41,8 @@ extern TCB *TaskTwoTCBPtr;              //任务二控制块指针
 extern TCB TaskOneTCB;                  //任务一控制块
 extern TCB TaskTwoTCB;                  //任务二控制块
 
+extern TCB *TaskIdleTCBPtr;
+extern TCB TaskIdleTCB;
 
 TASKSCH_EXT void TinyOSInit(void);
 TASKSCH_EXT void TinyOSStart(void);
@@ -47,6 +50,7 @@ TASKSCH_EXT void TaskInit(TASK_T *ptask, void *param, TCB *ptcb, Stack_t *pstack
 TASKSCH_EXT void TaskSched(void);
 TASKSCH_EXT void IntDisable(void);
 TASKSCH_EXT void IntEnable(void);
+TASKSCH_EXT void TaskDealy(unsigned int DelayTicks);
 
 
 #endif /* __TASKSCH_H_ */

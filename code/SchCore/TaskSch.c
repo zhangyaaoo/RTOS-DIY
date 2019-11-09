@@ -48,6 +48,7 @@ void TinyOSInit(void)
 
     TaskOneTCBPtr = &TaskOneTCB;
     TaskTwoTCBPtr = &TaskTwoTCB;
+    TaskIdleTCBPtr = &TaskIdleTCB;
 
     TaskTable[0]  = TaskOneTCBPtr;
     TaskTable[1]  = TaskTwoTCBPtr;
@@ -74,13 +75,52 @@ void TaskRunFirst(void)
 
 void TaskSched(void)
 {
-    if (CurrentTCBPtr == TaskTable[0])
+    if (CurrentTCBPtr == TaskIdleTCBPtr)
     {
-        NextTCBPtr = TaskTable[1];
+        if (TaskTable[0]->DelayTicks == 0)
+        {
+            NextTCBPtr = TaskTable[0];
+        }
+        else if (TaskTable[1]->DelayTicks == 0)
+        {
+            NextTCBPtr = TaskTable[1];
+        } else
+        {
+            return;
+        }
     }
     else
     {
-        NextTCBPtr = TaskTable[0];
+        if (CurrentTCBPtr == TaskTable[0])
+        {
+            if (TaskTable[1]->DelayTicks == 0)
+            {
+                NextTCBPtr = TaskTable[1];
+            }
+            else if (CurrentTCBPtr->DelayTicks != 0)
+            {
+                NextTCBPtr = TaskIdleTCBPtr;
+            }
+            else
+            {
+                return;
+            }
+        }
+        else if (CurrentTCBPtr == TaskTable[1])
+        {
+            if (TaskTable[0]->DelayTicks == 0)
+            {
+                NextTCBPtr = TaskTable[0];
+            }
+            else if (CurrentTCBPtr->DelayTicks != 0)
+            {
+                NextTCBPtr = TaskIdleTCBPtr;
+            }
+            else
+            {
+                return;
+            }
+        }
     }
     TaskSwitch();
 }
@@ -128,17 +168,32 @@ PendSVHandler_nosave
 
 void SysTick_Handler(void)
 {
+    unsigned int i;
+
+    for (i=0; i<2; i++)
+    {
+        if (TaskTable[i]->DelayTicks > 0)
+        {
+            TaskTable[i]->DelayTicks --;
+        }
+    }
     TaskSched();
 }
 
 __asm void IntDisable(void)
 {
-	CPSID   I
-	BX      LR
+    CPSID   I
+    BX      LR
 }
 
 __asm void IntEnable(void)
 {
-	CPSIE   I
-	BX      LR
+    CPSIE   I
+    BX      LR
+}
+
+void TaskDealy(unsigned int DelayTicks)
+{
+    CurrentTCBPtr->DelayTicks = DelayTicks;
+    TaskSched();
 }

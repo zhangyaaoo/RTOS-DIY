@@ -45,6 +45,8 @@ TASKSCH_EXT void TinyOSInit(void);
 TASKSCH_EXT void TinyOSStart(void);
 TASKSCH_EXT void TaskInit(TASK_T *ptask, void *param, TCB *ptcb, Stack_t *pstack);
 TASKSCH_EXT void TaskSched(void);
+TASKSCH_EXT void IntDisable(void);
+TASKSCH_EXT void IntEnable(void);
 
 
 #endif /* __TASKSCH_H_ */

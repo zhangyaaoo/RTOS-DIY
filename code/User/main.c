@@ -1,8 +1,8 @@
 #define __MAIN_C_
 #include "main.h"
 
-uint32_t FlagOne; 
-uint32_t FlagTwo; 
+uint32_t FlagOne;
+uint32_t FlagTwo;
 
 TCB *TaskOneTCBPtr;             //任务一控制块指针
 TCB *TaskTwoTCBPtr;             //任务二控制块指针
@@ -14,19 +14,26 @@ Stack_t TaskOneStackBuf[1024];  //任务一堆栈
 Stack_t TaskTwoStackBuf[1024];  //任务二堆栈
 
 void Delay(int n);
+void SetSysTickPeriod(uint32_t ms);
 
 void TaskOne(void *param);
 void TaskTwo(void *param);
 
 int main(void)
 {
+    IntDisable();
+
+    SetSysTickPeriod(10);
+
     TinyOSInit();
-    
+
     TaskInit(TaskOne, (void *)0x11111111, TaskOneTCBPtr, &TaskOneStackBuf[1024]);
     TaskInit(TaskTwo, (void *)0x22222222, TaskTwoTCBPtr, &TaskTwoStackBuf[1024]);
- 
+
     TinyOSStart();
-    
+
+    IntEnable();
+
     return 0;
 }
 
@@ -43,8 +50,7 @@ void TaskOne(void *param)
         FlagOne = 1;
         Delay(1000);
         FlagOne = 0;
-        Delay(1000);     
-        TaskSched();
+        Delay(1000);
     }
 }
 
@@ -55,8 +61,18 @@ void TaskTwo(void *param)
         FlagTwo = 1;
         Delay(1000);
         FlagTwo = 0;
-        Delay(1000); 
-        TaskSched();
+        Delay(1000);
     }
+}
+
+
+void SetSysTickPeriod(uint32_t ms)
+{
+    SysTick->LOAD  = ms * SystemCoreClock / 1000 - 1;
+    NVIC_SetPriority (SysTick_IRQn, (1<<__NVIC_PRIO_BITS) - 1);
+    SysTick->VAL   = 0;
+    SysTick->CTRL  = SysTick_CTRL_CLKSOURCE_Msk |
+                     SysTick_CTRL_TICKINT_Msk   |
+                     SysTick_CTRL_ENABLE_Msk;
 }
 

@@ -3,7 +3,7 @@
 
 #ifdef __MAIN_C_
 #define MAIN_EXT
-#else 
+#else
 #define MAIN_EXT extern
 #endif
 

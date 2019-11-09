@@ -116,9 +116,6 @@ PendSVHandler_nosave
     LDR     R2, [R1]
     STR     R2, [R0]        // CurrentTCBPtr = NextTCBPtr
 
-    PUSH    {R14}
-    POP     {R14}
-
     LDR     R0, [R2]
     LDMIA   R0!, {R4-R11}
     MSR     PSP, R0         //将R4-R11弹出任务堆栈
@@ -128,3 +125,20 @@ PendSVHandler_nosave
     BX      LR              //异常返回，并恢复自动保存的寄存器(PSR 返回地址 LR R12 R3 R2 R1 R0)中的内容
 }
 
+
+void SysTick_Handler(void)
+{
+    TaskSched();
+}
+
+__asm void IntDisable(void)
+{
+	CPSID   I
+	BX      LR
+}
+
+__asm void IntEnable(void)
+{
+	CPSIE   I
+	BX      LR
+}

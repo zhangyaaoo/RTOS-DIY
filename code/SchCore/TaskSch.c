@@ -13,7 +13,7 @@ void TaskSwitch(void);
   *   pstack: 任务堆栈的栈顶地址
   * @retval    None
   */
-void TaskInit(TASK_T *ptask, void *param, TCB *ptcb, Stack_t *pstack)
+TCB_t *TaskInit(TASK_t *ptask, TaskPrio_t prio, void *param, TCB_t *ptcb, Stack_t *pstack)
 {
     //在执行PendSVC异常时，PSR、返回地址、LR、R12、R3、R2、R1、R0这些寄存器是自动保存的
     //在执行PendSVC异常服务进行任务切换时，不需要手动保存这些寄存器的值
@@ -39,6 +39,12 @@ void TaskInit(TASK_T *ptask, void *param, TCB *ptcb, Stack_t *pstack)
     *(--pstack) = (unsigned int)0x04040404u;    //R4
 
     ptcb->StackPtr = pstack;
+
+    ptcb->Prio          = prio;
+    TaskTable[prio]     = ptcb;
+    BitmapSet(&TaskPrioBitMap, prio);
+
+    return ptcb;
 }
 
 void TinyOSInit(void)
@@ -46,20 +52,18 @@ void TinyOSInit(void)
     CurrentTCBPtr = (void *)0;
     NextTCBPtr    = (void *)0;
 
-    TaskOneTCBPtr = &TaskOneTCB;
-    TaskTwoTCBPtr = &TaskTwoTCB;
-    TaskIdleTCBPtr = &TaskIdleTCB;
-
-    TaskTable[0]  = TaskOneTCBPtr;
-    TaskTable[1]  = TaskTwoTCBPtr;
+    //初始化调度锁
     SchedLockCount = 0;
+
+    //初始化任务优先级位图
+    BitmapInit(&TaskPrioBitMap);
 }
 
 void TinyOSStart(void)
 {
     if (CurrentTCBPtr == (void *)0)
     {
-        NextTCBPtr = TaskTable[0];
+        NextTCBPtr = GetHighReadyTask();;
     }
 
     TaskRunFirst();
@@ -76,6 +80,8 @@ void TaskRunFirst(void)
 
 void TaskSched(void)
 {
+    TCB_t *HighReadyTask;
+
     uint32_t status = TaskEnterCritical();
 
     if (SchedLockCount > 0)
@@ -84,57 +90,14 @@ void TaskSched(void)
         return;
     }
 
-    if (CurrentTCBPtr == TaskIdleTCBPtr)
+    HighReadyTask = GetHighReadyTask();
+
+    if (HighReadyTask != CurrentTCBPtr)
     {
-        if (TaskTable[0]->DelayTicks == 0)
-        {
-            NextTCBPtr = TaskTable[0];
-        }
-        else if (TaskTable[1]->DelayTicks == 0)
-        {
-            NextTCBPtr = TaskTable[1];
-        } else
-        {
-            TaskExitCritical(status);
-            return;
-        }
+        NextTCBPtr = HighReadyTask;
+        TaskSwitch();
     }
-    else
-    {
-        if (CurrentTCBPtr == TaskTable[0])
-        {
-            if (TaskTable[1]->DelayTicks == 0)
-            {
-                NextTCBPtr = TaskTable[1];
-            }
-            else if (CurrentTCBPtr->DelayTicks != 0)
-            {
-                NextTCBPtr = TaskIdleTCBPtr;
-            }
-            else
-            {
-                TaskExitCritical(status);
-                return;
-            }
-        }
-        else if (CurrentTCBPtr == TaskTable[1])
-        {
-            if (TaskTable[0]->DelayTicks == 0)
-            {
-                NextTCBPtr = TaskTable[0];
-            }
-            else if (CurrentTCBPtr->DelayTicks != 0)
-            {
-                NextTCBPtr = TaskIdleTCBPtr;
-            }
-            else
-            {
-                TaskExitCritical(status);
-                return;
-            }
-        }
-    }
-    TaskSwitch();
+
     TaskExitCritical(status);
 }
 
@@ -183,13 +146,20 @@ void SysTick_Handler(void)
 {
     unsigned int i;
 
-    for (i=0; i<2; i++)
+    uint32_t status = TaskEnterCritical();
+    for (i=0; i<PRIO_NUM_MAX; i++)
     {
         if (TaskTable[i]->DelayTicks > 0)
         {
             TaskTable[i]->DelayTicks --;
         }
+        else
+        {
+            BitmapSet(&TaskPrioBitMap, TaskTable[i]->Prio);
+        }
     }
+    TaskExitCritical(status);
+
     TaskSched();
 }
 
@@ -207,7 +177,13 @@ __asm void IntEnable(void)
 
 void TaskDealy(unsigned int DelayTicks)
 {
+    uint32_t status = TaskEnterCritical();
+
     CurrentTCBPtr->DelayTicks = DelayTicks;
+    BitmapClear(&TaskPrioBitMap, CurrentTCBPtr->Prio);
+
+    TaskExitCritical(status);
+
     TaskSched();
 }
 
@@ -248,4 +224,13 @@ void TaskSchedEnable(void)
     }
 
     TaskExitCritical(status);
+}
+
+TCB_t *GetHighReadyTask(void)
+{
+    TCB_t *ptask;
+
+    ptask = TaskTable[BitmapGetFirstSet(&TaskPrioBitMap)];
+
+    return ptask;
 }

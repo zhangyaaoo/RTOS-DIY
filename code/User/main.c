@@ -4,13 +4,13 @@
 uint32_t FlagOne;
 uint32_t FlagTwo;
 
-TCB *TaskOneTCBPtr;             //任务一控制块指针
-TCB *TaskTwoTCBPtr;             //任务二控制块指针
-TCB *TaskIdleTCBPtr;            //空闲任务控制块指针
+TCB_t *TaskOneTCBPtr;             //任务一控制块指针
+TCB_t *TaskTwoTCBPtr;             //任务二控制块指针
+TCB_t *TaskIdleTCBPtr;            //空闲任务控制块指针
 
-TCB TaskOneTCB;                 //任务一控制块
-TCB TaskTwoTCB;                 //任务二控制块
-TCB TaskIdleTCB;                //空闲任务控制块
+TCB_t TaskOneTCB;                 //任务一控制块
+TCB_t TaskTwoTCB;                 //任务二控制块
+TCB_t TaskIdleTCB;                //空闲任务控制块
 
 Stack_t TaskOneStackBuf[1024];  //任务一堆栈
 Stack_t TaskTwoStackBuf[1024];  //任务二堆栈
@@ -31,9 +31,10 @@ int main(void)
 
     TinyOSInit();
 
-    TaskInit(TaskOne, (void *)0x11111111, TaskOneTCBPtr, &TaskOneStackBuf[1024]);
-    TaskInit(TaskTwo, (void *)0x22222222, TaskTwoTCBPtr, &TaskTwoStackBuf[1024]);
-    TaskInit(TaskIdle, (void *)0x0, TaskIdleTCBPtr, &TaskIdleStackBuf[1024]);
+    TaskOneTCBPtr = TaskInit(TaskOne, 1, (void *)0x11111111, &TaskOneTCB, &TaskOneStackBuf[1024]);
+    TaskTwoTCBPtr = TaskInit(TaskTwo, 2, (void *)0x22222222, &TaskTwoTCB, &TaskTwoStackBuf[1024]);
+    TaskIdleTCBPtr = TaskInit(TaskIdle, (PRIO_NUM_MAX - 1), (void *)0x0, &TaskIdleTCB, &TaskIdleStackBuf[1024]);
+
     TinyOSStart();
 
     IntEnable();

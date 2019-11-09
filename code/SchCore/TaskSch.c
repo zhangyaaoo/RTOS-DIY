@@ -52,6 +52,7 @@ void TinyOSInit(void)
 
     TaskTable[0]  = TaskOneTCBPtr;
     TaskTable[1]  = TaskTwoTCBPtr;
+    SchedLockCount = 0;
 }
 
 void TinyOSStart(void)
@@ -75,6 +76,14 @@ void TaskRunFirst(void)
 
 void TaskSched(void)
 {
+    uint32_t status = TaskEnterCritical();
+
+    if (SchedLockCount > 0)
+    {
+        TaskExitCritical(status);
+        return;
+    }
+
     if (CurrentTCBPtr == TaskIdleTCBPtr)
     {
         if (TaskTable[0]->DelayTicks == 0)
@@ -86,6 +95,7 @@ void TaskSched(void)
             NextTCBPtr = TaskTable[1];
         } else
         {
+            TaskExitCritical(status);
             return;
         }
     }
@@ -103,6 +113,7 @@ void TaskSched(void)
             }
             else
             {
+                TaskExitCritical(status);
                 return;
             }
         }
@@ -118,11 +129,13 @@ void TaskSched(void)
             }
             else
             {
+                TaskExitCritical(status);
                 return;
             }
         }
     }
     TaskSwitch();
+    TaskExitCritical(status);
 }
 
 
@@ -208,4 +221,31 @@ uint32_t TaskEnterCritical(void)
 void TaskExitCritical(uint32_t status)
 {
     __set_PRIMASK(status);
+}
+
+void TaskSchedDisable(void)
+{
+    uint32_t status = TaskEnterCritical();
+
+    if (SchedLockCount < 255)
+    {
+        SchedLockCount++;
+    }
+
+    TaskExitCritical(status);
+}
+
+void TaskSchedEnable(void)
+{
+    uint32_t status = TaskEnterCritical();
+
+    if (SchedLockCount > 0)
+    {
+        if (--SchedLockCount == 0)
+        {
+            TaskSched();
+        }
+    }
+
+    TaskExitCritical(status);
 }

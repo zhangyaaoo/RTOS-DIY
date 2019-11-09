@@ -35,6 +35,9 @@ TASKSCH_EXT TCB *NextTCBPtr;
 
 TASKSCH_EXT TCB *TaskTable[TASK_NUM_MAX];
 
+//调度锁计数器
+TASKSCH_EXT uint32_t SchedLockCount;
+
 extern TCB *TaskOneTCBPtr;              //任务一控制块指针
 extern TCB *TaskTwoTCBPtr;              //任务二控制块指针
 
@@ -56,5 +59,8 @@ TASKSCH_EXT void IntEnable(void);
 
 TASKSCH_EXT uint32_t TaskEnterCritical(void);
 TASKSCH_EXT void TaskExitCritical(uint32_t status);
+
+TASKSCH_EXT void TaskSchedDisable(void);
+TASKSCH_EXT void TaskSchedEnable(void);
 
 #endif /* __TASKSCH_H_ */

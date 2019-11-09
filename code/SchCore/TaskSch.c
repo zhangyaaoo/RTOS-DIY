@@ -197,3 +197,15 @@ void TaskDealy(unsigned int DelayTicks)
     CurrentTCBPtr->DelayTicks = DelayTicks;
     TaskSched();
 }
+
+uint32_t TaskEnterCritical(void)
+{
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();        // CPSID I
+    return primask;
+}
+
+void TaskExitCritical(uint32_t status)
+{
+    __set_PRIMASK(status);
+}

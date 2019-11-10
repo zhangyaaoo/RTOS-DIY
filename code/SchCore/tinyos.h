@@ -79,4 +79,4 @@ void TaskRmFromRdyTable(TCB_t *pTcb);
 void TaskReqDel(TCB_t *pTcb);
 uint8_t TaskIsReqedDel(void);
 void TaskDelSelf (void);
-#endif /* __TASKSCH_H_ */
+#endif /* __TINYOS_H_ */

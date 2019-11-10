@@ -26,10 +26,12 @@
 typedef struct TaskCtrlBlock
 {
     unsigned int *StackPtr;     //Stack Pointer
+    Node_t       LinkNode;      //TaskLinkNode
     unsigned int DelayTicks;    //DelayTicks Count
     TaskPrio_t   Prio;          //TaskPrio
-    Node_t       DelayNode;
-    TaskState_t  TaskState;
+    Node_t       DelayNode;     //Task delay list's node
+    TaskState_t  TaskState;     //TaskState indicate
+    uint32_t     Slice;         //Task run time slice
 }TCB_t;
 
 typedef unsigned int Stack_t;
@@ -40,7 +42,7 @@ typedef void TASK_t(void *);    //定义任务函数类型
 TASKSCH_EXT TCB_t *CurrentTCBPtr;
 TASKSCH_EXT TCB_t *NextTCBPtr;
 
-TASKSCH_EXT TCB_t *TaskTable[PRIO_NUM_MAX];
+TASKSCH_EXT List_t TaskTable[PRIO_NUM_MAX];
 
 //调度锁计数器
 TASKSCH_EXT uint32_t SchedLockCount;
@@ -63,7 +65,7 @@ TASKSCH_EXT void TinyOSStart(void);
 TASKSCH_EXT TCB_t *TaskInit(TASK_t *ptask, TaskPrio_t prio, void *param, TCB_t *ptcb, Stack_t *pstack);
 TASKSCH_EXT void TaskSched(void);
 
-TASKSCH_EXT void TaskDealy(unsigned int DelayTicks);
+TASKSCH_EXT void TaskDelay(unsigned int DelayTicks);
 
 TASKSCH_EXT void IntDisable(void);
 TASKSCH_EXT void IntEnable(void);

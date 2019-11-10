@@ -11,4 +11,6 @@
 
 #define PRIO_NUM_MAX        32u
 
+#define TASK_RUN_TIMESLICE  10u
+
 #endif /* __OS_CFG_H_ */

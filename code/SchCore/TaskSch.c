@@ -13,48 +13,58 @@ void TaskSwitch(void);
   *   pstack: 任务堆栈的栈顶地址
   * @retval    None
   */
-TCB_t *TaskInit(TASK_t *ptask, TaskPrio_t prio, void *param, TCB_t *ptcb, Stack_t *pstack)
+TCB_t *TaskInit(TASK_t *pTask, TaskPrio_t Prio, void *param, TCB_t *pTcb, Stack_t *pStack)
 {
     //在执行PendSVC异常时，PSR、返回地址、LR、R12、R3、R2、R1、R0这些寄存器是自动保存的
     //在执行PendSVC异常服务进行任务切换时，不需要手动保存这些寄存器的值
     //在进行任务栈初始化时，这些寄存器在栈中的顺序与自动保存的顺序一样，自动保存的顺序就是：PSR..>R0
     //初始化栈时，我们将返回地址设置为任务函数的入口地址，这样，在切换到该任务首次执行时，就可以正确的从头开始执行任务。
     //任务函数的形参，我们是通过将参数放在R0寄存器中实现函数形参的传递。
-    *(--pstack) = (unsigned int)(1 << 24);      //PSR
-    *(--pstack) = (unsigned int)ptask;          //返回地址(赋值为任务函数的入口地址)
-    *(--pstack) = (unsigned int)0x14141414u;    //LR
-    *(--pstack) = (unsigned int)0x12121212u;    //R12
-    *(--pstack) = (unsigned int)0x03030303u;    //R3
-    *(--pstack) = (unsigned int)0x02020202u;    //R2
-    *(--pstack) = (unsigned int)0x01010101u;    //R1
-    *(--pstack) = (unsigned int)param;          //R0(赋值为任务函数的形参，将形参传递给任务函数)
+    *(--pStack) = (unsigned int)(1 << 24);      //PSR
+    *(--pStack) = (unsigned int)pTask;          //返回地址(赋值为任务函数的入口地址)
+    *(--pStack) = (unsigned int)0x14141414u;    //LR
+    *(--pStack) = (unsigned int)0x12121212u;    //R12
+    *(--pStack) = (unsigned int)0x03030303u;    //R3
+    *(--pStack) = (unsigned int)0x02020202u;    //R2
+    *(--pStack) = (unsigned int)0x01010101u;    //R1
+    *(--pStack) = (unsigned int)param;          //R0(赋值为任务函数的形参，将形参传递给任务函数)
 
-    *(--pstack) = (unsigned int)0x11111111u;    //R11
-    *(--pstack) = (unsigned int)0x10101010u;    //R10
-    *(--pstack) = (unsigned int)0x09090909u;    //R9
-    *(--pstack) = (unsigned int)0x08080808u;    //R8
-    *(--pstack) = (unsigned int)0x07070707u;    //R7
-    *(--pstack) = (unsigned int)0x06060606u;    //R6
-    *(--pstack) = (unsigned int)0x05050505u;    //R5
-    *(--pstack) = (unsigned int)0x04040404u;    //R4
+    *(--pStack) = (unsigned int)0x11111111u;    //R11
+    *(--pStack) = (unsigned int)0x10101010u;    //R10
+    *(--pStack) = (unsigned int)0x09090909u;    //R9
+    *(--pStack) = (unsigned int)0x08080808u;    //R8
+    *(--pStack) = (unsigned int)0x07070707u;    //R7
+    *(--pStack) = (unsigned int)0x06060606u;    //R6
+    *(--pStack) = (unsigned int)0x05050505u;    //R5
+    *(--pStack) = (unsigned int)0x04040404u;    //R4
 
-    ptcb->StackPtr = pstack;
-
-    ptcb->Prio          = prio;
-    TaskTable[prio]     = ptcb;
-    BitmapSet(&TaskPrioBitMap, prio);
+    //初始化任务栈指针
+    pTcb->StackPtr      = pStack;
 
     //初始化任务延时节点
-    NodeInit(&ptcb->DelayNode);
+    NodeInit(&pTcb->DelayNode);
+
+    //初始化任务链表节点
+    NodeInit(&pTcb->LinkNode);
+
+    //初始化任务优先级  任务就绪位图  任务检索表
+    pTcb->Prio          = Prio;
+    ListInsertHead(&TaskTable[Prio], &pTcb->LinkNode);
+    BitmapSet(&TaskPrioBitMap, Prio);
 
     //初始化任务状态
-    ptcb->TaskState = TASK_STATE_READY;
+    pTcb->TaskState = TASK_STATE_READY;
 
-    return ptcb;
+    //初始化任务运行时间片的大小
+    pTcb->Slice =  TASK_RUN_TIMESLICE;
+
+    return pTcb;
 }
 
 void TinyOSInit(void)
 {
+    uint32_t i;
+
     CurrentTCBPtr = (void *)0;
     NextTCBPtr    = (void *)0;
 
@@ -63,8 +73,15 @@ void TinyOSInit(void)
 
     //初始化任务优先级位图
     BitmapInit(&TaskPrioBitMap);
+
     //初始化任务延时列表
     ListInit(&TaskDelayList);
+
+    //初始化任务就绪表
+    for (i = 0; i < PRIO_NUM_MAX; i++)
+    {
+        ListInit(&TaskTable[i]);
+    }
 }
 
 void TinyOSStart(void)
@@ -169,6 +186,17 @@ void SysTick_Handler(void)
         }
     }
 
+    if (ListCount(&TaskTable[CurrentTCBPtr->Prio]) > 1)
+    {
+        if (--CurrentTCBPtr->Slice == 0)
+        {
+            ListRemoveHead(&TaskTable[CurrentTCBPtr->Prio]);
+            ListInsertTail(&TaskTable[CurrentTCBPtr->Prio], &(CurrentTCBPtr->LinkNode));
+
+            CurrentTCBPtr->Slice = TASK_RUN_TIMESLICE;
+        }
+    }
+
     TaskExitCritical(status);
 
     TaskSched();
@@ -186,7 +214,7 @@ __asm void IntEnable(void)
     BX      LR
 }
 
-void TaskDealy(unsigned int DelayTicks)
+void TaskDelay(unsigned int DelayTicks)
 {
     uint32_t status = TaskEnterCritical();
 
@@ -208,16 +236,23 @@ void TaskInsertToDelayList(TCB_t *ptcb, uint32_t DelayTicks)
 
 void TaskRmvFromDelayList(TCB_t *ptcb)
 {
-    ListRemoveNode(&TaskDelayList, &(ptcb->DelayNode));
+    ListRemoveNode(&TaskDelayList, &ptcb->DelayNode);
 }
 
 void TaskReliefReady(TCB_t *ptcb)
 {
-    BitmapClear(&TaskPrioBitMap, ptcb->Prio);
+    ListRemoveNode(&TaskTable[ptcb->Prio], &(ptcb->LinkNode));
+
+    //队列中可能存在多个任务，只有队列中没有任务时，才清除位图
+    if (ListCount(&TaskTable[ptcb->Prio]) == 0)
+    {
+        BitmapClear(&TaskPrioBitMap, ptcb->Prio);
+    }
 }
 
 void TaskGetReady(TCB_t *ptcb)
 {
+    ListInsertHead(&TaskTable[ptcb->Prio], &ptcb->LinkNode);
     BitmapSet(&TaskPrioBitMap, ptcb->Prio);
 }
 
@@ -262,9 +297,11 @@ void TaskSchedEnable(void)
 
 TCB_t *GetHighReadyTask(void)
 {
-    TCB_t *ptask;
+    uint32_t HighestPrio;
+    Node_t *Node;
 
-    ptask = TaskTable[BitmapGetFirstSet(&TaskPrioBitMap)];
+    HighestPrio = BitmapGetFirstSet(&TaskPrioBitMap);
+    Node = ListFirst(&(TaskTable[HighestPrio]));
 
-    return ptask;
+    return CONTAINER_OF(Node, TCB_t, LinkNode);
 }

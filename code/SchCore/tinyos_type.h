@@ -13,6 +13,7 @@
 typedef unsigned int TaskPrio_t;
 typedef unsigned int Stack_t;
 typedef void TASK_t(void *);    //定义任务函数类型
+typedef void CLEAN_FUNC_t(void *);      //定义清理函数类型
 
 /* task control block */
 typedef struct TaskCtrlBlock
@@ -25,6 +26,9 @@ typedef struct TaskCtrlBlock
     uint32_t     TaskState;     //TaskState indicate
     uint32_t     Slice;         //Task run time slice
     uint32_t     SuspendCount;  //Task suspend count
+    CLEAN_FUNC_t    *CleanFunc;     //when task is been deleted, this is the callback function.
+    void            *CleanParam;    //CleanFunc's param.
+    uint8_t          ReqDelFlag;
 }TCB_t;
 
 #define TINYOS_TASK_STATE_RDY                   (0)

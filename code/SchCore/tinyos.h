@@ -65,6 +65,18 @@ void TaskRmvFromDelayList(TCB_t *ptcb);
 void TaskSetReady(TCB_t *ptcb);
 void TaskReliefReady(TCB_t *ptcb);
 
-void TaskSuspend(TCB_t *ptcb);
-void TaskunSuspend(TCB_t *ptcb);
+void TaskSuspend(TCB_t *pTcb);
+void TaskunSuspend(TCB_t *pTcb);
+
+void TaskRmFromDelayList(TCB_t *pTcb);
+void TaskRmFromRdyTable(TCB_t *pTcb);
+
+void TaskSetCleanCallFunc(TCB_t *pTcb, CLEAN_FUNC_t *CleanFunc, void *param);
+void TaskDelForce(TCB_t *pTcb);
+
+void TaskRmFromDelayList(TCB_t *pTcb);
+void TaskRmFromRdyTable(TCB_t *pTcb);
+void TaskReqDel(TCB_t *pTcb);
+uint8_t TaskIsReqedDel(void);
+void TaskDelSelf (void);
 #endif /* __TASKSCH_H_ */

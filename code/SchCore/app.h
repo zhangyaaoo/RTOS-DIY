@@ -9,21 +9,26 @@
 
 #include "tinyos.h"
 
-APP_EXT TCB_t *TaskOneTCBPtr;             //ÈÎÎñÒ»¿ØÖÆ¿éÖ¸Õë
-APP_EXT TCB_t *TaskTwoTCBPtr;             //ÈÎÎñ¶ş¿ØÖÆ¿éÖ¸Õë
-APP_EXT TCB_t *TaskThreeTCBPtr;           //ÈÎÎñÈı¿ØÖÆ¿éÖ¸Õë
+APP_EXT TCB_t   TaskOneTCB;                 //ä»»åŠ¡ä¸€æ§åˆ¶å—
+APP_EXT TCB_t  *TaskOneTCBPtr;              //ä»»åŠ¡ä¸€æ§åˆ¶å—æŒ‡é’ˆ
+APP_EXT Stack_t TaskOneStackBuf[1024];      //ä»»åŠ¡ä¸€å †æ ˆ
 
-APP_EXT TCB_t TaskOneTCB;                 //ÈÎÎñÒ»¿ØÖÆ¿é
-APP_EXT TCB_t TaskTwoTCB;                 //ÈÎÎñ¶ş¿ØÖÆ¿é
-APP_EXT TCB_t TaskThreeTCB;               //ÈÎÎñÈı¿ØÖÆ¿é
+APP_EXT TCB_t   TaskTwoTCB;                 //ä»»åŠ¡äºŒæ§åˆ¶å—
+APP_EXT TCB_t  *TaskTwoTCBPtr;              //ä»»åŠ¡äºŒæ§åˆ¶å—æŒ‡é’ˆ
+APP_EXT Stack_t TaskTwoStackBuf[1024];      //ä»»åŠ¡äºŒå †æ ˆ
 
-APP_EXT Stack_t TaskOneStackBuf[1024];    //ÈÎÎñÒ»¶ÑÕ»
-APP_EXT Stack_t TaskTwoStackBuf[1024];    //ÈÎÎñ¶ş¶ÑÕ»
-APP_EXT Stack_t TaskThreeStackBuf[1024];  //ÈÎÎñÈı¶ÑÕ»
+APP_EXT TCB_t   TaskThreeTCB;               //ä»»åŠ¡ä¸‰æ§åˆ¶å—
+APP_EXT TCB_t  *TaskThreeTCBPtr;            //ä»»åŠ¡ä¸‰æ§åˆ¶å—æŒ‡é’ˆ
+APP_EXT Stack_t TaskThreeStackBuf[1024];    //ä»»åŠ¡ä¸‰å †æ ˆ
+
+APP_EXT TCB_t   TaskFourTCB;                //ä»»åŠ¡å››æ§åˆ¶å—
+APP_EXT TCB_t  *TaskFourTCBPtr;             //ä»»åŠ¡å››æ§åˆ¶å—æŒ‡é’ˆ
+APP_EXT Stack_t TaskFourStackBuf[1024];     //ä»»åŠ¡å››å †æ ˆ
 
 APP_EXT void TaskOne(void *param);
 APP_EXT void TaskTwo(void *param);
 APP_EXT void TaskThree(void *param);
+APP_EXT void TaskFour(void *param);
 
 APP_EXT void Delay(int n);
 

@@ -66,6 +66,12 @@ TCB_t *TaskInit(TASK_t *pTask, TaskPrio_t Prio, void *param, TCB_t *pTcb, Stack_
     //初始化任务挂起计数器
     pTcb->SuspendCount =  0;
 
+    pTcb->CleanFunc = (CLEAN_FUNC_t *)0;
+    pTcb->CleanParam = (void *)0;
+
+    //初始化任务删除请求标志
+    pTcb->ReqDelFlag = 0;
+
     return pTcb;
 }
 
@@ -257,6 +263,88 @@ void TaskunSuspend(TCB_t *pTcb)
             TaskSched();
         }
     }
+
+    TaskExitCritical(status);
+}
+
+void TaskSetCleanCallFunc(TCB_t *pTcb, CLEAN_FUNC_t *CleanFunc, void *param)
+{
+    pTcb->CleanFunc = CleanFunc;
+    pTcb->CleanParam = param;
+}
+
+void TaskDelForce(TCB_t *pTcb)
+{
+    uint32_t status = TaskEnterCritical();
+
+    if (pTcb->TaskState & TINYOS_TASK_STATE_DELAYED)
+    {
+        TaskRmFromDelayList(pTcb);
+    }
+    else if (!(pTcb->TaskState & TINYOS_TASK_STATE_SUSPEND))
+    {
+        TaskRmFromRdyTable(pTcb);
+    }
+
+    if (pTcb->CleanFunc)
+    {
+        pTcb->CleanFunc(pTcb->CleanParam);
+    }
+
+    if (pTcb == CurrentTask)
+    {
+        TaskSched();
+    }
+
+    TaskExitCritical(status);
+}
+
+void TaskRmFromDelayList(TCB_t *pTcb)
+{
+    ListRemoveNode(&TaskDelayList, &pTcb->DelayNode);
+}
+
+void TaskRmFromRdyTable(TCB_t *pTcb)
+{
+    ListRemoveNode(&TaskTable[pTcb->Prio], &(pTcb->LinkNode));
+
+    //队列中可能存在多个任务，只有队列中没有任务时，才清除位图
+    if (ListCount(&TaskTable[pTcb->Prio]) == 0)
+    {
+        BitmapClear(&TaskPrioBitMap, pTcb->Prio);
+    }
+}
+
+void TaskReqDel(TCB_t *pTcb)
+{
+    uint32_t status = TaskEnterCritical();
+    pTcb->ReqDelFlag = 1;
+    TaskExitCritical(status);
+}
+
+uint8_t TaskIsReqedDel(void)
+{
+    uint8_t del;
+
+    uint32_t status = TaskEnterCritical();
+
+    del = CurrentTask->ReqDelFlag;
+
+    TaskExitCritical(status);
+
+    return del;
+}
+
+void TaskDelSelf (void)
+{
+    uint32_t status = TaskEnterCritical();
+
+    TaskRmFromRdyTable(CurrentTask);
+    if (CurrentTask->CleanFunc)
+    {
+        CurrentTask->CleanFunc(CurrentTask->CleanParam);
+    }
+    TaskSched();
 
     TaskExitCritical(status);
 }

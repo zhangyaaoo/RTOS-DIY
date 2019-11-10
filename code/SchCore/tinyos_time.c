@@ -18,10 +18,11 @@ void TaskInsertToDelayList(TCB_t *ptcb, uint32_t DelayTicks)
 {
     ptcb->DelayTicks = DelayTicks;
     ListInsertHead(&TaskDelayList, &(ptcb->DelayNode));
-    //ptcb->TaskState = TASK_STATE_DELAYED;
+    ptcb->TaskState |= TINYOS_TASK_STATE_DELAYED;
 }
 
 void TaskRmvFromDelayList(TCB_t *ptcb)
 {
     ListRemoveNode(&TaskDelayList, &ptcb->DelayNode);
+	ptcb->TaskState |= ~TINYOS_TASK_STATE_DELAYED;
 }

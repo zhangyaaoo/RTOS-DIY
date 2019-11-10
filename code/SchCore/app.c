@@ -10,9 +10,9 @@ void TaskOne(void *param)
     while (1)
     {
         FlagOne = 1;
-        TaskDelay(1);
+        TaskSuspend(TaskOneTCBPtr);
         FlagOne = 0;
-        TaskDelay(1);
+        TaskSuspend(TaskOneTCBPtr);
     }
 }
 
@@ -21,9 +21,11 @@ void TaskTwo(void *param)
     while (1)
     {
         FlagTwo = 1;
-        Delay(10);
+        TaskDelay(1);
+        TaskunSuspend(TaskOneTCBPtr);
         FlagTwo = 0;
-        Delay(10);
+        TaskDelay(1);
+        TaskunSuspend(TaskOneTCBPtr);
     }
 }
 
@@ -32,9 +34,9 @@ void TaskThree(void *param)
     while (1)
     {
         FlagThree = 1;
-        Delay(10);
+        TaskDelay(2);
         FlagThree = 0;
-        Delay(10);
+        TaskDelay(2);
     }
 }
 

@@ -58,10 +58,13 @@ TCB_t *TaskInit(TASK_t *pTask, TaskPrio_t Prio, void *param, TCB_t *pTcb, Stack_
     BitmapSet(&TaskPrioBitMap, Prio);
 
     //初始化任务状态
-    pTcb->TaskState = TASK_STATE_READY;
+    pTcb->TaskState = TINYOS_TASK_STATE_RDY;
 
     //初始化任务运行时间片的大小
     pTcb->Slice =  TASK_RUN_TIMESLICE;
+
+    //初始化任务挂起计数器
+    pTcb->SuspendCount =  0;
 
     return pTcb;
 }
@@ -214,3 +217,46 @@ void TaskIdle(void *param)
     }
 }
 
+void TaskSuspend(TCB_t *pTcb)
+{
+
+    uint32_t status = TaskEnterCritical();
+
+    //不允许将正在延时的任务挂起
+    if (!(pTcb->TaskState & TINYOS_TASK_STATE_DELAYED))
+    {
+        //如果是第一次挂起，就执行如下操作
+        if (++pTcb->SuspendCount <= 1)
+        {
+            pTcb->TaskState |= TINYOS_TASK_STATE_SUSPEND;
+
+            TaskReliefReady(pTcb);
+
+            if (pTcb == CurrentTask)
+            {
+                TaskSched();
+            }
+        }
+    }
+
+    TaskExitCritical(status);
+}
+
+void TaskunSuspend(TCB_t *pTcb)
+{
+    uint32_t status = TaskEnterCritical();
+
+    if (pTcb->TaskState & TINYOS_TASK_STATE_SUSPEND)
+    {
+        if (--pTcb->SuspendCount == 0)
+        {
+            pTcb->TaskState &= ~TINYOS_TASK_STATE_SUSPEND;
+
+            TaskSetReady(pTcb);
+
+            TaskSched();
+        }
+    }
+
+    TaskExitCritical(status);
+}

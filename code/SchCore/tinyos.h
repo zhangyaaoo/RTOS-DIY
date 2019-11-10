@@ -65,4 +65,6 @@ void TaskRmvFromDelayList(TCB_t *ptcb);
 void TaskSetReady(TCB_t *ptcb);
 void TaskReliefReady(TCB_t *ptcb);
 
+void TaskSuspend(TCB_t *ptcb);
+void TaskunSuspend(TCB_t *ptcb);
 #endif /* __TASKSCH_H_ */

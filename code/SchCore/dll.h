@@ -50,4 +50,3 @@ DLL_EXT void     ListRemoveNode     (List_t *List, Node_t *Node);
 DLL_EXT void     ListRemoveAll      (List_t *List);
 
 #endif /* __DLL_H_ */
-

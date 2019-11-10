@@ -7,6 +7,6 @@
 #define MAIN_EXT extern
 #endif
 
-#include "TaskSch.h"
+#include "app.h"
 
 #endif /* __MAIN_H_ */

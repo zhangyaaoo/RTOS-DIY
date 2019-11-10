@@ -11,6 +11,7 @@
 #include "os_type.h"
 #include "os_cfg.h"
 #include "bitmap.h"
+#include "dll.h"
 
 #define NVIC_INT_CTRL       0xE000ED04      //Interrupt control state register.
 #define NVIC_SYSPRI14       0xE000ED22      //System priority register (priority 14).
@@ -26,7 +27,9 @@ typedef struct TaskCtrlBlock
 {
     unsigned int *StackPtr;     //Stack Pointer
     unsigned int DelayTicks;    //DelayTicks Count
-	TaskPrio_t   Prio;			//TaskPrio
+    TaskPrio_t   Prio;          //TaskPrio
+    Node_t       DelayNode;
+    TaskState_t  TaskState;
 }TCB_t;
 
 typedef unsigned int Stack_t;
@@ -44,6 +47,7 @@ TASKSCH_EXT uint32_t SchedLockCount;
 
 TASKSCH_EXT BitMap_t TaskPrioBitMap;
 
+TASKSCH_EXT List_t   TaskDelayList;
 extern TCB_t *TaskOneTCBPtr;              //任务一控制块指针
 extern TCB_t *TaskTwoTCBPtr;              //任务二控制块指针
 
@@ -70,5 +74,10 @@ TASKSCH_EXT void TaskExitCritical(uint32_t status);
 TASKSCH_EXT void TaskSchedDisable(void);
 TASKSCH_EXT void TaskSchedEnable(void);
 TASKSCH_EXT TCB_t *GetHighReadyTask(void);
+
+TASKSCH_EXT void TaskInsertToDelayList(TCB_t *ptcb, uint32_t DelayTicks);
+TASKSCH_EXT void TaskRmvFromDelayList(TCB_t *ptcb);
+TASKSCH_EXT void TaskGetReady(TCB_t *ptcb);
+TASKSCH_EXT void TaskReliefReady(TCB_t *ptcb);
 
 #endif /* __TASKSCH_H_ */

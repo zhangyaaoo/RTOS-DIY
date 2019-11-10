@@ -11,4 +11,10 @@
 
 typedef     uint32_t        TaskPrio_t;
 
+typedef enum
+{
+    TASK_STATE_RUN,
+    TASK_STATE_READY,
+    TASK_STATE_DELAYED,
+}TaskState_t;
 #endif /* __OS_TYPE_H_ */

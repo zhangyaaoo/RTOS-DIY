@@ -44,6 +44,12 @@ TCB_t *TaskInit(TASK_t *ptask, TaskPrio_t prio, void *param, TCB_t *ptcb, Stack_
     TaskTable[prio]     = ptcb;
     BitmapSet(&TaskPrioBitMap, prio);
 
+    //初始化任务延时节点
+    NodeInit(&ptcb->DelayNode);
+
+    //初始化任务状态
+    ptcb->TaskState = TASK_STATE_READY;
+
     return ptcb;
 }
 
@@ -57,6 +63,8 @@ void TinyOSInit(void)
 
     //初始化任务优先级位图
     BitmapInit(&TaskPrioBitMap);
+    //初始化任务延时列表
+    ListInit(&TaskDelayList);
 }
 
 void TinyOSStart(void)
@@ -144,20 +152,23 @@ PendSVHandler_nosave
 
 void SysTick_Handler(void)
 {
-    unsigned int i;
+    Node_t *Node;
+    TCB_t  *ptcb;
 
     uint32_t status = TaskEnterCritical();
-    for (i=0; i<PRIO_NUM_MAX; i++)
+
+    for (Node = TaskDelayList.HeadNode.NextNode; Node != &(TaskDelayList.HeadNode); Node = Node->NextNode)
     {
-        if (TaskTable[i]->DelayTicks > 0)
+        ptcb = CONTAINER_OF(Node, TCB_t, DelayNode);
+
+        if (--(ptcb->DelayTicks) == 0)
         {
-            TaskTable[i]->DelayTicks --;
-        }
-        else
-        {
-            BitmapSet(&TaskPrioBitMap, TaskTable[i]->Prio);
+            TaskRmvFromDelayList(ptcb);
+
+            TaskGetReady(ptcb);
         }
     }
+
     TaskExitCritical(status);
 
     TaskSched();
@@ -179,12 +190,35 @@ void TaskDealy(unsigned int DelayTicks)
 {
     uint32_t status = TaskEnterCritical();
 
-    CurrentTCBPtr->DelayTicks = DelayTicks;
-    BitmapClear(&TaskPrioBitMap, CurrentTCBPtr->Prio);
+    TaskInsertToDelayList(CurrentTCBPtr, DelayTicks);
+
+    TaskReliefReady(CurrentTCBPtr);
 
     TaskExitCritical(status);
 
     TaskSched();
+}
+
+void TaskInsertToDelayList(TCB_t *ptcb, uint32_t DelayTicks)
+{
+    ptcb->DelayTicks = DelayTicks;
+    ListInsertHead(&TaskDelayList, &(ptcb->DelayNode));
+    //ptcb->TaskState = TASK_STATE_DELAYED;
+}
+
+void TaskRmvFromDelayList(TCB_t *ptcb)
+{
+    ListRemoveNode(&TaskDelayList, &(ptcb->DelayNode));
+}
+
+void TaskReliefReady(TCB_t *ptcb)
+{
+    BitmapClear(&TaskPrioBitMap, ptcb->Prio);
+}
+
+void TaskGetReady(TCB_t *ptcb)
+{
+    BitmapSet(&TaskPrioBitMap, ptcb->Prio);
 }
 
 uint32_t TaskEnterCritical(void)

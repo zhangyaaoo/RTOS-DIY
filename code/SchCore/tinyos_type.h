@@ -31,6 +31,16 @@ typedef struct TaskCtrlBlock
     uint8_t          ReqDelFlag;
 }TCB_t;
 
+/* Task Information */
+typedef struct _TaskInfo_t
+{
+    TaskPrio_t       Prio;          //TaskPrio
+    uint32_t         TaskState;     //TaskState indicate
+    uint32_t         DelayTicks;    //DelayTicks Count
+    uint32_t         Slice;         //Task run time slice
+    uint32_t         SuspendCount;  //Task suspend count
+}TaskInfo_t;
+
 #define TINYOS_TASK_STATE_RDY                   (0)
 #define TINYOS_TASK_STATE_DELAYED               (1 << 1)
 #define TINYOS_TASK_STATE_SUSPEND               (1 << 2)

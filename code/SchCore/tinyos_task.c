@@ -348,3 +348,16 @@ void TaskDelSelf (void)
 
     TaskExitCritical(status);
 }
+
+void TaskGetInfo(TCB_t *pTcb, TaskInfo_t *Info)
+{
+    uint32_t status = TaskEnterCritical();
+
+    Info->Prio          = pTcb->Prio;
+    Info->TaskState     = pTcb->TaskState;
+    Info->DelayTicks    = pTcb->DelayTicks;
+    Info->Slice         = pTcb->Slice;
+    Info->SuspendCount  = pTcb->SuspendCount;
+
+    TaskExitCritical(status);
+}

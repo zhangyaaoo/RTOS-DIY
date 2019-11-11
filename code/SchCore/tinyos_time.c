@@ -14,15 +14,15 @@ void TaskDelay(unsigned int DelayTicks)
     TaskSched();
 }
 
-void TaskInsertToDelayList(TCB_t *ptcb, uint32_t DelayTicks)
+void TaskInsertToDelayList(TCB_t *pTcb, uint32_t DelayTicks)
 {
-    ptcb->DelayTicks = DelayTicks;
-    ListInsertHead(&TaskDelayList, &(ptcb->DelayNode));
-    ptcb->TaskState |= TINYOS_TASK_STATE_DELAYED;
+    pTcb->DelayTicks = DelayTicks;
+    ListInsertHead(&TaskDelayList, &(pTcb->DelayNode));
+    pTcb->TaskState |= TINYOS_TASK_STATE_DELAYED;
 }
 
-void TaskRmvFromDelayList(TCB_t *ptcb)
+void TaskRmvFromDelayList(TCB_t *pTcb)
 {
-    ListRemoveNode(&TaskDelayList, &ptcb->DelayNode);
-	ptcb->TaskState &= ~TINYOS_TASK_STATE_DELAYED;
+    ListRemoveNode(&TaskDelayList, &pTcb->DelayNode);
+    pTcb->TaskState &= ~TINYOS_TASK_STATE_DELAYED;
 }

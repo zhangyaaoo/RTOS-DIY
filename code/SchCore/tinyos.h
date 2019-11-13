@@ -7,7 +7,7 @@
 #define  TINYOS_EXT  extern
 #endif
 
-#include "ARMCM3.h"
+#include "stm32f10x.h"
 #include "tinyos_type.h"
 #include "tinyos_cfg.h"
 
@@ -100,6 +100,18 @@ TCB_t      *EventWakeUp     (Event_t *Event, void *Msg, uint32_t Result);
 void        EventRemoveTask (TCB_t *pTcb, void *Msg, uint32_t Result);
 uint32_t    EventRemoveAll  (Event_t *Event, void *Msg, uint32_t Result);
 uint32_t    EventWaitCount  (Event_t *Event);
+
+/*
+===============================================================================
+*                            TINYOS SEM SECTION
+===============================================================================
+*/
+void        SemInit         (Sem_t *Sem, uint32_t StartCount, uint32_t MaxCount);
+uint32_t    SemWait         (Sem_t *Sem, uint32_t WaitTicks);
+uint32_t    SemNoWaitGet    (Sem_t *Sem);
+void        SemNotify       (Sem_t *Sem);
+void        SemGetInfo      (Sem_t *Sem, SemInfo_t *Info);
+uint32_t    SemDestroy      (Sem_t *Sem);
 
 /*
 ===============================================================================

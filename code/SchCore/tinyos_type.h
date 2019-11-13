@@ -19,6 +19,8 @@ typedef enum
 {
     ErrorCode_NoError = 0,
     ErrorCode_Timeout,
+    ErrorCode_ResourceUnavaliable,
+    ErrorCode_Deleted,
 }ErrorCode_t;
 
 
@@ -26,6 +28,7 @@ typedef enum
 typedef enum
 {
     EventTypeUnknown,
+    EventTypeSem,
 }EventType_t;
 
 typedef struct
@@ -62,6 +65,20 @@ typedef struct _TaskInfo_t
     uint32_t         Slice;         //Task run time slice
     uint32_t         SuspendCount;  //Task suspend count
 }TaskInfo_t;
+
+typedef struct _Sem_t
+{
+    Event_t             Event;
+    uint32_t            Count;
+    uint32_t            MaxCount;
+}Sem_t;
+
+typedef struct _SemInfo_t
+{
+    uint32_t Count;
+    uint32_t MaxCount;
+    uint32_t TaskCount;
+}SemInfo_t;
 
 #define TINYOS_TASK_STATE_RDY                   (0u)
 #define TINYOS_TASK_STATE_DELAYED               (1u << 1)

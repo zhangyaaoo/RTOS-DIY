@@ -1,5 +1,4 @@
 #define __TINYOS_CPU_C_
-#include "ARMCM3.h"
 #include "tinyos.h"
 
 /** @funcname  example1

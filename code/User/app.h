@@ -32,4 +32,6 @@ APP_EXT void TaskFour(void *param);
 
 APP_EXT void Delay(int n);
 
+APP_EXT void AppInit(void);
+
 #endif /* __APP_H_ */

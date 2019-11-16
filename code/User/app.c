@@ -50,8 +50,29 @@ void TaskFour(void *param)
     }
 }
 
+void printf_log(void *param)
+{
+    while (1)
+    {
+        FlagFour = 1;
+        TaskDelay(2);
+        FlagFour = 0;
+        TaskDelay(2);
+    }
+}
+
+
 void Delay(int n)
 {
     volatile int i = n;
     while (--i);
 }
+
+void AppInit(void)
+{
+    TaskOneTCBPtr   = TaskInit(TaskOne, 0, (void *)0x11111111, &TaskOneTCB, &TaskOneStackBuf[1024]);
+    TaskTwoTCBPtr   = TaskInit(TaskTwo, 1, (void *)0x22222222, &TaskTwoTCB, &TaskTwoStackBuf[1024]);
+    TaskThreeTCBPtr = TaskInit(TaskThree, 1, (void *)0x33333333, &TaskThreeTCB, &TaskThreeStackBuf[1024]);
+    TaskFourTCBPtr  = TaskInit(TaskFour, 2, (void *)0x44444444, &TaskFourTCB, &TaskFourStackBuf[1024]);
+}
+

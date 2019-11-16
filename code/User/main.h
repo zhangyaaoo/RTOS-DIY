@@ -7,6 +7,7 @@
 #define MAIN_EXT extern
 #endif
 
+#include "bsp.h"
 #include "app.h"
 
 #endif /* __MAIN_H_ */

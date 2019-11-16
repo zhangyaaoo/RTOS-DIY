@@ -43,24 +43,10 @@ void TaskFour(void *param)
 {
     while (1)
     {
-        FlagFour = 1;
-        TaskDelay(2);
-        FlagFour = 0;
-        TaskDelay(2);
+        printf("hello,world!\r\n");
+        TaskDelay(20);
     }
 }
-
-void printf_log(void *param)
-{
-    while (1)
-    {
-        FlagFour = 1;
-        TaskDelay(2);
-        FlagFour = 0;
-        TaskDelay(2);
-    }
-}
-
 
 void Delay(int n)
 {

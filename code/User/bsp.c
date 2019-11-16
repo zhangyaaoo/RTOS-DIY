@@ -1,6 +1,20 @@
 #define __BSP_C_
+#include <stdio.h>
 #include "tinyos.h"
 #include "bsp.h"
+
+#ifdef __GNUC__
+    #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+    #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
+
+PUTCHAR_PROTOTYPE
+{
+    USART_SendData(USART2, (uint8_t)ch);
+    while (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+    return ch;
+}
 
 void USART2_Config(void)
 {
@@ -69,9 +83,9 @@ uint8_t USART2_Send_Byte(uint8_t data)
 {
     uint8_t temp = 0;
 
-    if (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
+    if (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET)
     {
-        USART_SendData(USART1, data);
+        USART_SendData(USART2, data);
     }
     else
     {

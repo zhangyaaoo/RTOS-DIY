@@ -7,6 +7,7 @@
 #define APP_EXT extern
 #endif
 
+#include <stdio.h>
 #include "tinyos.h"
 
 APP_EXT TCB_t   TaskOneTCB;                 //任务一控制块

@@ -21,6 +21,7 @@ typedef enum
     ErrorCode_Timeout,
     ErrorCode_ResourceUnavaliable,
     ErrorCode_Deleted,
+    ErrorCode_ResourceFull,
 }ErrorCode_t;
 
 
@@ -29,6 +30,7 @@ typedef enum
 {
     EventTypeUnknown,
     EventTypeSem,
+    EventTypeMbox,
 }EventType_t;
 
 typedef struct
@@ -79,6 +81,28 @@ typedef struct _SemInfo_t
     uint32_t MaxCount;
     uint32_t TaskCount;
 }SemInfo_t;
+
+
+/** 邮箱类型定义
+  */
+typedef struct _Mbox_t
+{
+    Event_t         Event;      //事件控制块，特意放在结构体中的第一个元素，以实现首地址相同
+    uint32_t        Count;      //邮箱内当前的消息数量
+    uint32_t        ReadIndex;  //邮箱消息缓冲区读索引
+    uint32_t        WriteIndex; //邮箱消息缓冲区写索引
+    uint32_t        MaxCount;   //邮箱内能够缓冲的最大消息数量
+    void          **MsgBuf;     //消息缓冲区
+}Mbox_t;
+
+/** 邮箱信息类型定义
+  */
+typedef struct _MboxInfo_t
+{
+    uint32_t        Count;      //当前缓存的消息数量
+    uint32_t        MaxCount;   //最大能缓存的消息数量
+    uint32_t        TaskCount;  //当前等待的任务数量
+}MboxInfo_t;
 
 #define TINYOS_TASK_STATE_RDY                   (0u)
 #define TINYOS_TASK_STATE_DELAYED               (1u << 1)

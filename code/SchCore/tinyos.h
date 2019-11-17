@@ -115,6 +115,22 @@ uint32_t    SemDestroy      (Sem_t *Sem);
 
 /*
 ===============================================================================
+*                            TINYOS MBOX SECTION
+===============================================================================
+*/
+#define MBOXSENDNORMAL              0u          //消息正常发送到缓冲区
+#define MBOXSENDFRONT               1u          //消息发送到缓冲区头部
+
+void        MboxInit        (Mbox_t *Mbox, void **MsgBuf, uint32_t MaxCount);
+uint32_t    MboxWait        (Mbox_t *Mbox, void **Msg, uint32_t WaitTicks);
+uint32_t    MboxNoWaitGet   (Mbox_t *Mbox, void **Msg);
+uint32_t    MboxNotify      (Mbox_t *Mbox, void *Msg, uint32_t NotifyOpt);
+void        MboxClear       (Mbox_t *Mbox);
+uint32_t    MboxDestroy     (Mbox_t *Mbox);
+void        MboxGetInfo     (Mbox_t *Mbox, MboxInfo_t *Info);
+
+/*
+===============================================================================
 *                            TINYOS CPU SECTION
 ===============================================================================
 */
